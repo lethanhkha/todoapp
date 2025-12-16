@@ -1,0 +1,16 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Local development
+.env
+.env.local
