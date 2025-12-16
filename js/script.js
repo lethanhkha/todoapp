@@ -25,6 +25,14 @@ class TaskManager {
         this.completedTasksEl = document.getElementById('completedTasks');
         this.pendingTasksEl = document.getElementById('pendingTasks');
 
+        // Modal Elements
+        this.modalOverlay = document.getElementById('inputModal');
+        this.modalTitle = document.getElementById('modalTitle');
+        this.modalInput = document.getElementById('modalInput');
+        this.modalConfirm = document.getElementById('modalConfirm');
+        this.modalCancel = document.getElementById('modalCancel');
+        this.modalClose = document.getElementById('modalClose');
+
         this.init();
     }
 
@@ -126,33 +134,34 @@ class TaskManager {
     }
 
     addSubtask(parentId) {
-        const text = prompt('Nhập tên subtask:');
-        if (!text || !text.trim()) return;
-
         const parent = this.findTask(parentId);
         if (!parent) return;
 
-        const subtask = {
-            id: this.generateId(),
-            parentId: parentId,
-            text: text.trim(),
-            date: parent.date,
-            subject: parent.subject,
-            tag: '',
-            priority: parent.priority,
-            completed: false,
-            expanded: true,
-            createdAt: new Date().toISOString()
-        };
+        this.showModal('Thêm subtask', 'Nhập tên subtask...').then(text => {
+            if (!text || !text.trim()) return;
 
-        this.tasks.push(subtask);
+            const subtask = {
+                id: this.generateId(),
+                parentId: parentId,
+                text: text.trim(),
+                date: parent.date,
+                subject: parent.subject,
+                tag: '',
+                priority: parent.priority,
+                completed: false,
+                expanded: true,
+                createdAt: new Date().toISOString()
+            };
 
-        // Ensure parent is expanded
-        parent.expanded = true;
+            this.tasks.push(subtask);
 
-        this.saveTasks();
-        this.renderTasks();
-        this.updateStats();
+            // Ensure parent is expanded
+            parent.expanded = true;
+
+            this.saveTasks();
+            this.renderTasks();
+            this.updateStats();
+        });
     }
 
 
@@ -224,12 +233,67 @@ class TaskManager {
         const task = this.findTask(id);
         if (!task) return;
 
-        const newText = prompt('Sửa công việc:', task.text);
-        if (newText !== null && newText.trim()) {
-            task.text = newText.trim();
-            this.saveTasks();
-            this.renderTasks();
-        }
+        this.showModal('Sửa công việc', 'Nhập nội dung mới...', task.text).then(newText => {
+            if (newText !== null && newText.trim()) {
+                task.text = newText.trim();
+                this.saveTasks();
+                this.renderTasks();
+            }
+        });
+    }
+
+    // ===== Modal Helper =====
+    showModal(title, placeholder, defaultValue = '') {
+        return new Promise((resolve) => {
+            this.modalTitle.textContent = title;
+            this.modalInput.placeholder = placeholder;
+            this.modalInput.value = defaultValue;
+            this.modalOverlay.classList.add('active');
+
+            // Focus input after animation
+            setTimeout(() => this.modalInput.focus(), 100);
+
+            const cleanup = () => {
+                this.modalOverlay.classList.remove('active');
+                this.modalConfirm.removeEventListener('click', onConfirm);
+                this.modalCancel.removeEventListener('click', onCancel);
+                this.modalClose.removeEventListener('click', onCancel);
+                this.modalInput.removeEventListener('keydown', onKeydown);
+                this.modalOverlay.removeEventListener('click', onOverlayClick);
+            };
+
+            const onConfirm = () => {
+                const value = this.modalInput.value;
+                cleanup();
+                resolve(value);
+            };
+
+            const onCancel = () => {
+                cleanup();
+                resolve(null);
+            };
+
+            const onKeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    onConfirm();
+                } else if (e.key === 'Escape') {
+                    onCancel();
+                }
+            };
+
+            const onOverlayClick = (e) => {
+                if (e.target === this.modalOverlay) {
+                    onCancel();
+                }
+            };
+
+            this.modalConfirm.addEventListener('click', onConfirm);
+            this.modalCancel.addEventListener('click', onCancel);
+            this.modalClose.addEventListener('click', onCancel);
+            this.modalInput.addEventListener('keydown', onKeydown);
+            this.modalOverlay.addEventListener('click', onOverlayClick);
+        });
     }
 
     // ===== Event Handlers =====
