@@ -115,7 +115,7 @@
         </footer>
     </div>
 
-    <!-- Input Modal -->
+    <!-- Input Modal (for simple prompts like adding subtask) -->
     <div id="inputModal" class="modal-overlay">
         <div class="modal-container glass-card">
             <div class="modal-header">
@@ -128,6 +128,50 @@
             <div class="modal-footer">
                 <button class="btn-modal btn-cancel" id="modalCancel">Hủy</button>
                 <button class="btn-modal btn-confirm" id="modalConfirm">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal (for full task editing) -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-container glass-card modal-wide">
+            <div class="modal-header">
+                <h3>Sửa công việc</h3>
+                <button class="modal-close" id="editModalClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="edit-form-group">
+                    <label for="editTaskText">Tên công việc</label>
+                    <input type="text" id="editTaskText" class="modal-input" placeholder="Nhập công việc...">
+                </div>
+                <div class="edit-form-row">
+                    <div class="edit-form-group">
+                        <label for="editTaskDate">Ngày</label>
+                        <input type="text" id="editTaskDate" class="modal-input" placeholder="dd/MM/yyyy">
+                    </div>
+                    <div class="edit-form-group">
+                        <label for="editTaskPriority">Độ ưu tiên</label>
+                        <select id="editTaskPriority" class="modal-select">
+                            <option value="low">Thấp</option>
+                            <option value="medium">Trung bình</option>
+                            <option value="high">Cao</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="edit-form-row">
+                    <div class="edit-form-group">
+                        <label for="editTaskSubject">Môn học</label>
+                        <input type="text" id="editTaskSubject" class="modal-input" placeholder="VD: PTUD">
+                    </div>
+                    <div class="edit-form-group">
+                        <label for="editTaskTag">Tag</label>
+                        <input type="text" id="editTaskTag" class="modal-input" placeholder="VD: Thi">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-cancel" id="editModalCancel">Hủy</button>
+                <button class="btn-modal btn-confirm" id="editModalConfirm">Lưu thay đổi</button>
             </div>
         </div>
     </div>

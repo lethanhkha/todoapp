@@ -1158,6 +1158,56 @@ body::before {
     box-shadow: var(--shadow-glow);
 }
 
+/* Edit Modal Form Styles */
+.modal-wide {
+    max-width: 520px;
+}
+
+.edit-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.edit-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.edit-form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.edit-form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.edit-form-row .edit-form-group {
+    flex: 1;
+}
+
+.modal-select {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.modal-select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+
 /* ===== Selection Styling ===== */
 ::selection {
     background: rgba(99, 102, 241, 0.3);

@@ -25,13 +25,24 @@ class TaskManager {
         this.completedTasksEl = document.getElementById('completedTasks');
         this.pendingTasksEl = document.getElementById('pendingTasks');
 
-        // Modal Elements
+        // Modal Elements (simple input modal)
         this.modalOverlay = document.getElementById('inputModal');
         this.modalTitle = document.getElementById('modalTitle');
         this.modalInput = document.getElementById('modalInput');
         this.modalConfirm = document.getElementById('modalConfirm');
         this.modalCancel = document.getElementById('modalCancel');
         this.modalClose = document.getElementById('modalClose');
+
+        // Edit Modal Elements (full task edit modal)
+        this.editModalOverlay = document.getElementById('editModal');
+        this.editTaskText = document.getElementById('editTaskText');
+        this.editTaskDate = document.getElementById('editTaskDate');
+        this.editTaskSubject = document.getElementById('editTaskSubject');
+        this.editTaskTag = document.getElementById('editTaskTag');
+        this.editTaskPriority = document.getElementById('editTaskPriority');
+        this.editModalConfirm = document.getElementById('editModalConfirm');
+        this.editModalCancel = document.getElementById('editModalCancel');
+        this.editModalClose = document.getElementById('editModalClose');
 
         this.init();
     }
@@ -233,16 +244,20 @@ class TaskManager {
         const task = this.findTask(id);
         if (!task) return;
 
-        this.showModal('Sửa công việc', 'Nhập nội dung mới...', task.text).then(newText => {
-            if (newText !== null && newText.trim()) {
-                task.text = newText.trim();
+        this.showEditModal(task).then(updatedData => {
+            if (updatedData) {
+                task.text = updatedData.text;
+                task.date = this.parseInputDate(updatedData.date);
+                task.subject = updatedData.subject;
+                task.tag = updatedData.tag;
+                task.priority = updatedData.priority;
                 this.saveTasks();
                 this.renderTasks();
             }
         });
     }
 
-    // ===== Modal Helper =====
+    // ===== Modal Helper (Simple Input) =====
     showModal(title, placeholder, defaultValue = '') {
         return new Promise((resolve) => {
             this.modalTitle.textContent = title;
@@ -293,6 +308,69 @@ class TaskManager {
             this.modalClose.addEventListener('click', onCancel);
             this.modalInput.addEventListener('keydown', onKeydown);
             this.modalOverlay.addEventListener('click', onOverlayClick);
+        });
+    }
+
+    // ===== Edit Modal Helper (Full Task Edit) =====
+    showEditModal(task) {
+        return new Promise((resolve) => {
+            // Populate form with task data
+            this.editTaskText.value = task.text;
+            this.editTaskDate.value = this.formatDisplayDate(task.date);
+            this.editTaskSubject.value = task.subject || '';
+            this.editTaskTag.value = task.tag || '';
+            this.editTaskPriority.value = task.priority;
+
+            this.editModalOverlay.classList.add('active');
+
+            // Focus input after animation
+            setTimeout(() => this.editTaskText.focus(), 100);
+
+            const cleanup = () => {
+                this.editModalOverlay.classList.remove('active');
+                this.editModalConfirm.removeEventListener('click', onConfirm);
+                this.editModalCancel.removeEventListener('click', onCancel);
+                this.editModalClose.removeEventListener('click', onCancel);
+                this.editModalOverlay.removeEventListener('click', onOverlayClick);
+                document.removeEventListener('keydown', onKeydown);
+            };
+
+            const onConfirm = () => {
+                const data = {
+                    text: this.editTaskText.value.trim(),
+                    date: this.editTaskDate.value,
+                    subject: this.editTaskSubject.value.trim(),
+                    tag: this.editTaskTag.value.trim(),
+                    priority: this.editTaskPriority.value
+                };
+                if (data.text) {
+                    cleanup();
+                    resolve(data);
+                }
+            };
+
+            const onCancel = () => {
+                cleanup();
+                resolve(null);
+            };
+
+            const onKeydown = (e) => {
+                if (e.key === 'Escape') {
+                    onCancel();
+                }
+            };
+
+            const onOverlayClick = (e) => {
+                if (e.target === this.editModalOverlay) {
+                    onCancel();
+                }
+            };
+
+            this.editModalConfirm.addEventListener('click', onConfirm);
+            this.editModalCancel.addEventListener('click', onCancel);
+            this.editModalClose.addEventListener('click', onCancel);
+            this.editModalOverlay.addEventListener('click', onOverlayClick);
+            document.addEventListener('keydown', onKeydown);
         });
     }
 
