@@ -37,8 +37,11 @@ class TaskManager {
     }
 
     setDefaultDate() {
-        const today = new Date().toISOString().split('T')[0];
-        this.taskDate.value = today;
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const year = today.getFullYear();
+        this.taskDate.value = `${day}/${month}/${year}`;
     }
 
     // ===== Event Bindings =====
@@ -99,7 +102,7 @@ class TaskManager {
             id: this.generateId(),
             parentId: parentId,
             text: text,
-            date: this.taskDate.value || new Date().toISOString().split('T')[0],
+            date: this.parseInputDate(this.taskDate.value),
             subject: this.taskSubject.value.trim(),
             tag: this.taskTag.value.trim(),
             priority: this.prioritySelect.value,
@@ -334,6 +337,8 @@ class TaskManager {
         const children = this.getChildren(task.id);
         const visibleChildren = children.filter(c => this.shouldShowTask(c));
         const hasVisibleChildren = visibleChildren.length > 0;
+        const hasChildren = children.length > 0;
+        const completionPercent = hasChildren ? this.getCompletionPercentage(task.id) : null;
 
         // Build the children HTML first (nested ul inside this li)
         let childrenHtml = '';
@@ -343,10 +348,10 @@ class TaskManager {
             childrenHtml += `</ul>`;
         }
 
-        return this.createTaskHTML(task, level, hasVisibleChildren, childrenHtml);
+        return this.createTaskHTML(task, level, hasVisibleChildren, childrenHtml, completionPercent);
     }
 
-    createTaskHTML(task, level = 0, hasChildren = false, childrenHtml = '') {
+    createTaskHTML(task, level = 0, hasChildren = false, childrenHtml = '', completionPercent = null) {
         const priorityLabels = {
             high: 'Cao',
             medium: 'TB',
@@ -368,6 +373,10 @@ class TaskManager {
             ? `<span class="tag-badge">${this.escapeHTML(task.tag)}</span>`
             : '';
 
+        const progressBadge = completionPercent !== null
+            ? `<span class="progress-badge ${completionPercent === 100 ? 'complete' : ''}">${completionPercent}%</span>`
+            : '';
+
         return `
             <li class="task-item-wrapper level-${level}">
                 <div class="task-item ${task.completed ? 'completed' : ''}" data-id="${task.id}" style="--indent: ${indent}px;">
@@ -379,6 +388,7 @@ class TaskManager {
                     <div class="task-content">
                         <div class="task-header">
                             <span class="task-text">${this.escapeHTML(task.text)}</span>
+                            ${progressBadge}
                             <span class="priority-badge ${task.priority}">${priorityLabels[task.priority]}</span>
                         </div>
                         <div class="task-meta">
@@ -462,14 +472,44 @@ class TaskManager {
     }
 
     // ===== Utilities =====
+    getCompletionPercentage(taskId) {
+        const descendants = this.getAllDescendants(taskId);
+        if (descendants.length === 0) return null;
+
+        const completedCount = descendants.filter(t => t.completed).length;
+        return Math.round((completedCount / descendants.length) * 100);
+    }
+
     formatDisplayDate(dateString) {
         if (!dateString) return '';
+        // Handle both ISO format (yyyy-MM-dd) and dd/MM/yyyy format
+        if (dateString.includes('/')) {
+            return dateString; // Already in display format
+        }
         const date = new Date(dateString + 'T00:00:00');
-        return date.toLocaleDateString('vi-VN', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+
+    parseInputDate(dateString) {
+        if (!dateString) {
+            return new Date().toISOString().split('T')[0];
+        }
+        // If already in ISO format, return as-is
+        if (dateString.includes('-')) {
+            return dateString;
+        }
+        // Parse dd/MM/yyyy format
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+            const day = parts[0].padStart(2, '0');
+            const month = parts[1].padStart(2, '0');
+            const year = parts[2];
+            return `${year}-${month}-${day}`;
+        }
+        return new Date().toISOString().split('T')[0];
     }
 
     escapeHTML(text) {
